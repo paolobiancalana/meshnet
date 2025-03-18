@@ -61,8 +61,15 @@ while [ "$1" != "" ]; do
     shift
 done
 
+# Determina quale interprete Python usare
+if [ -n "$VIRTUAL_ENV" ]; then
+    PYTHON="$VIRTUAL_ENV/bin/python"
+else
+    PYTHON="python3"
+fi
+
 # Prepara il comando
-CMD="python -m meshnet.core.vpn_node --server $SERVER"
+CMD="$PYTHON -m meshnet.core.vpn_node --server $SERVER"
 
 # Aggiungi parametri opzionali se specificati
 if [ ! -z "$ID" ]; then
@@ -86,7 +93,7 @@ if [ ! -z "$KEY" ]; then
 else
     echo "ATTENZIONE: Chiave di crittografia non specificata. Tutti i nodi della rete devono usare la stessa chiave."
     echo "Usa l'opzione --key o genera una nuova chiave con:"
-    echo "python -c \"import nacl.secret, nacl.utils; print(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE).hex())\""
+    echo "$PYTHON -c \"import nacl.secret, nacl.utils; print(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE).hex())\""
     exit 1
 fi
 

@@ -1,0 +1,2 @@
+pynacl>=1.4.0
+ipaddress>=1.0.23 

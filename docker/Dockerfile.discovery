@@ -1,0 +1,22 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copia solo i file necessari
+COPY meshnet/discovery/discovery_server.py meshnet/discovery/
+COPY meshnet/discovery/__init__.py meshnet/discovery/
+COPY meshnet/discovery/mesh_node.py meshnet/discovery/
+COPY meshnet/discovery/stun_client.py meshnet/discovery/
+
+# Installa le dipendenze
+RUN pip install --no-cache-dir pynacl flask cryptography
+
+# Argomenti predefiniti
+ENV PORT=8000
+ENV BIND=0.0.0.0
+
+# Esponi la porta
+EXPOSE $PORT/udp
+
+# Comando di avvio
+CMD ["sh", "-c", "python -u meshnet/discovery/discovery_server.py --port $PORT --bind $BIND"] 

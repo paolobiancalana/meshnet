@@ -70,4 +70,11 @@ config.local.ini
 node_modules/
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log* 
+yarn-error.log*
+
+# Docker e Podman portable
+tools/docker-portable/
+tools/podman/
+tools/bin/
+.dockerenv
+.docker/ 

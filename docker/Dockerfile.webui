@@ -1,0 +1,26 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copia il codice
+COPY meshnet/ meshnet/
+COPY orchestrator.py .
+
+# Installa le dipendenze
+RUN pip install --no-cache-dir pynacl cryptography flask flask-cors
+
+# Argomenti predefiniti
+ENV DISCOVERY_HOST=discovery
+ENV DISCOVERY_PORT=8000
+ENV WEB_PORT=8080
+
+# Esponi la porta
+EXPOSE $WEB_PORT
+
+# Crea il file di avvio
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'python -u meshnet/webui/app.py --discovery-host $DISCOVERY_HOST --discovery-port $DISCOVERY_PORT --port $WEB_PORT' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Comando di avvio
+CMD ["/app/start.sh"] 

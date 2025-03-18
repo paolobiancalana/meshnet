@@ -1,10 +1,12 @@
 #!/bin/bash
 # Avvia un nodo VPN mesh
 
-# Verifica se l'utente è root (necessario per TUN)
-if [ "$EUID" -ne 0 ]; then
-  echo "Per favore esegui come root (sudo) per creare l'interfaccia TUN"
-  exit 1
+# Controlla se lo script è eseguito come root (necessario per interfacce TUN/TAP)
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Sono richiesti privilegi di amministratore per creare interfacce TUN/TAP."
+    echo "Eseguo nuovamente lo script con sudo..."
+    exec sudo "$0" "$@"
+    exit $?
 fi
 
 # Server di scoperta di default
@@ -26,7 +28,7 @@ function show_help {
     echo "  --port PORT          Porta locale UDP (default: assegnata dal sistema)"
     echo "  --tun ADDRESS        Indirizzo interfaccia TUN (es: 10.0.0.1/24)"
     echo "  --network NETWORK    Rete VPN CIDR (default: 10.0.0.0/24)"
-    echo "  --key KEY            Chiave di crittografia (hex)"
+    echo "  --key KEY            Chiave di crittografia (hex, generata automaticamente se non specificata)"
     echo "  --help               Mostra questo aiuto"
 }
 
@@ -61,15 +63,38 @@ while [ "$1" != "" ]; do
     shift
 done
 
-# Determina quale interprete Python usare
-if [ -n "$VIRTUAL_ENV" ]; then
-    PYTHON="$VIRTUAL_ENV/bin/python"
-else
+# Trova l'interprete Python
+if command -v python3 &>/dev/null; then
     PYTHON="python3"
+elif command -v python &>/dev/null; then
+    PYTHON="python"
+else
+    echo "Errore: Python non trovato. Installa Python 3."
+    exit 1
+fi
+
+# Genera chiave se non specificata
+if [ -z "$KEY" ]; then
+    echo "Nessuna chiave specificata, genero una chiave casuale..."
+    if ! command -v $PYTHON >/dev/null 2>&1; then
+        echo "Errore: Python è richiesto per generare la chiave"
+        exit 1
+    fi
+    
+    # Verifica se PyNaCl è installato
+    if ! $PYTHON -c "import nacl.utils" >/dev/null 2>&1; then
+        echo "Errore: PyNaCl è richiesto per generare la chiave"
+        echo "Installa con: pip install pynacl"
+        exit 1
+    fi
+    
+    # Genera chiave con Python e nacl
+    KEY=$($PYTHON -c "import nacl.utils, binascii; print(binascii.hexlify(nacl.utils.random(32)).decode())")
+    echo "Chiave generata: $KEY"
 fi
 
 # Prepara il comando
-CMD="$PYTHON -m meshnet.core.vpn_node --server $SERVER"
+CMD="$PYTHON meshnet/core/vpn_node.py --server $SERVER"
 
 # Aggiungi parametri opzionali se specificati
 if [ ! -z "$ID" ]; then
@@ -88,14 +113,7 @@ if [ ! -z "$NETWORK" ]; then
     CMD="$CMD --network $NETWORK"
 fi
 
-if [ ! -z "$KEY" ]; then
-    CMD="$CMD --key $KEY"
-else
-    echo "ATTENZIONE: Chiave di crittografia non specificata. Tutti i nodi della rete devono usare la stessa chiave."
-    echo "Usa l'opzione --key o genera una nuova chiave con:"
-    echo "$PYTHON -c \"import nacl.secret, nacl.utils; print(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE).hex())\""
-    exit 1
-fi
+CMD="$CMD --key $KEY"
 
 echo "Avvio nodo VPN mesh..."
 echo "Server di scoperta: $SERVER"
@@ -103,6 +121,8 @@ if [ ! -z "$ID" ]; then
     echo "ID nodo: $ID"
 fi
 echo "Rete: $NETWORK"
+echo "Usando interprete Python: $PYTHON"
+echo "Chiave: $KEY"
 
 echo "Esecuzione: $CMD"
 $CMD 

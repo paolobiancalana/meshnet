@@ -8,10 +8,18 @@ if [ $# -eq 1 ]; then
     PORT=$1
 fi
 
-echo "Avvio server di scoperta sulla porta $PORT..."
-# Usa python dall'ambiente virtuale se presente
-if [ -n "$VIRTUAL_ENV" ]; then
-    "$VIRTUAL_ENV/bin/python" -m meshnet.discovery.discovery_server --port $PORT
+# Trova l'interprete Python
+if command -v python3 &>/dev/null; then
+    PYTHON="python3"
+elif command -v python &>/dev/null; then
+    PYTHON="python"
 else
-    python3 -m meshnet.discovery.discovery_server --port $PORT
-fi 
+    echo "Errore: Python non trovato. Installa Python 3."
+    exit 1
+fi
+
+echo "Avvio server di scoperta sulla porta $PORT..."
+echo "Usando interprete Python: $PYTHON"
+
+# Esegui direttamente il file invece del modulo
+$PYTHON meshnet/discovery/discovery_server.py --port $PORT 

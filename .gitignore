@@ -1,0 +1,73 @@
+# File generati da Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Ambienti virtuali
+venv/
+ENV/
+env/
+virtualenv/
+.env/
+.venv/
+
+# File di sistema operativo
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Log e file temporanei
+*.log
+logs/
+*.tmp
+*.bak
+*.swp
+*~
+
+# File specifici per questo progetto
+# Chiavi e certificati
+*.key
+*.pem
+*.cert
+*.crt
+
+# File di configurazione locali
+config.local.ini
+*.conf.local
+
+# File IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+
+# Altri file specifici
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log* 

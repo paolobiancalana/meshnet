@@ -273,6 +273,12 @@ class TunAdapter:
             True se operazione riuscita, False altrimenti
         """
         try:
+            # Controlla se l'utente è root
+            if os.geteuid() != 0:
+                self.logger.error("Sono richiesti privilegi di amministratore (root) per creare interfacce TUN")
+                self.logger.error("Esegui il comando con 'sudo'")
+                return False
+                
             # Usa moduli specifici macOS
             import fcntl
             
@@ -289,46 +295,46 @@ class TunAdapter:
                 except ValueError:
                     pass
                     
-            # Interfaccia utun
-            target = f'/dev/utun{utun_num}' if utun_num is not None else '/dev/utun0'
-                
             # Prova ad aprire l'interfaccia
-            # Per semplicità, utilizziamo un approccio esterno
             result = subprocess.run(['ifconfig'], capture_output=True, text=True)
             existing_utuns = []
             for line in result.stdout.splitlines():
                 if line.startswith('utun'):
                     existing_utuns.append(line.split(':')[0])
+            
+            self.logger.info(f"Interfacce utun esistenti: {existing_utuns}")
                     
             # Cerca una utun disponibile
-            if not self.name or self.name not in existing_utuns:
-                # Crea nuova utun
-                for i in range(10):  # Prova 10 interfacce
-                    try:
-                        self.fd = os.open(f'/dev/utun{i}', os.O_RDWR)
-                        self.name = f'utun{i}'
-                        break
-                    except:
-                        continue
-            else:
-                # Usa esistente
+            found_interface = False
+            for i in range(10):  # Prova 10 interfacce
                 try:
-                    self.fd = os.open(f'/dev/{self.name}', os.O_RDWR)
-                except:
-                    self.logger.error(f"Impossibile aprire {self.name}")
-                    return False
+                    interface_path = f'/dev/utun{i}'
+                    self.logger.info(f"Tentativo di apertura: {interface_path}")
+                    self.fd = os.open(interface_path, os.O_RDWR)
+                    self.name = f'utun{i}'
+                    found_interface = True
+                    self.logger.info(f"Interfaccia {self.name} aperta con successo")
+                    break
+                except OSError as e:
+                    self.logger.debug(f"Errore aprendo {interface_path}: {e}")
+                    continue
                     
-            if not self.fd:
+            if not found_interface:
                 self.logger.error("Impossibile trovare o creare interfaccia utun")
+                self.logger.error("Verifica di avere i privilegi di root e che le interfacce utun siano disponibili")
                 return False
                 
             # Converti in file Python
             self.tun_file = os.fdopen(self.fd, 'rb+')
             
             # Configura interfaccia
-            self._setup_interface_macos()
+            result = self._setup_interface_macos()
+            if not result:
+                self.logger.error("Configurazione interfaccia fallita")
+                self.close()
+                return False
             
-            self.logger.info(f"Interfaccia {self.name} aperta con successo")
+            self.logger.info(f"Interfaccia {self.name} aperta e configurata con successo")
             return True
             
         except Exception as e:

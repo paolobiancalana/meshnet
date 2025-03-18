@@ -7,6 +7,7 @@ import json
 import time
 import logging
 from typing import Dict, Any, Tuple, List, Set
+import argparse
 
 # Configurazione logging
 logging.basicConfig(
@@ -235,8 +236,15 @@ class DiscoveryServer:
         
 if __name__ == "__main__":
     # Esempio di esecuzione
-    server = DiscoveryServer()
+    parser = argparse.ArgumentParser(description='Server di scoperta per MeshNet')
+    parser.add_argument('--port', type=int, default=8000, help='Porta di ascolto (default: 8000)')
+    parser.add_argument('--bind', default='0.0.0.0', help='Indirizzo di binding (default: 0.0.0.0)')
+    args = parser.parse_args()
+    
+    server = DiscoveryServer(bind_address=args.bind, port=args.port)
     server.start()
+    
+    print(f"Server di scoperta avviato su {args.bind}:{args.port}")
     try:
         while True:
             time.sleep(1)

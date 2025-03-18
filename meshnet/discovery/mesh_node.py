@@ -12,9 +12,9 @@ from typing import Dict, Any, Tuple, Optional, List, Set
 # Importa moduli locali
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.node import Node
-from discovery.stun_client import StunClient
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from meshnet.core.node import Node
+from meshnet.discovery.stun_client import StunClient
 
 # Configurazione logging
 logging.basicConfig(

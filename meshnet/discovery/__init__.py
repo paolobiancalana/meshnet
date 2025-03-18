@@ -12,6 +12,6 @@ Questo modulo contiene i componenti per la scoperta e la connessione dei peer:
 
 from .stun_client import StunClient
 from .discovery_server import DiscoveryServer
-from .mesh_node import MeshNode
+# from .mesh_node import MeshNode  # Importato separatamente per evitare cicli di importazione
 
-__all__ = ['StunClient', 'DiscoveryServer', 'MeshNode'] 
+__all__ = ['StunClient', 'DiscoveryServer'] 

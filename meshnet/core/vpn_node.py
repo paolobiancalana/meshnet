@@ -10,9 +10,9 @@ from typing import Dict, Any, Optional, Tuple, List, Set, Union
 
 # Importa moduli locali
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from discovery.mesh_node import MeshNode
-from core.tun_adapter import TunAdapter
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from meshnet.discovery.mesh_node import MeshNode
+from meshnet.core.tun_adapter import TunAdapter
 
 # Importa moduli per crittografia
 import nacl.secret
@@ -71,13 +71,19 @@ class VpnNode(MeshNode):
         self.routing_table: Dict[str, str] = {}  # IP -> node_id
         self.ip_mapping: Dict[str, str] = {}  # node_id -> IP
         
-        # Estensione capabilities
-        self._capabilities.update({
+        # Funzionalità VPN
+        self.vpn_capabilities = {
             'vpn': True,
             'vpn_network': str(self.network),
-        })
+        }
         
         self.logger.info(f"Nodo VPN inizializzato con rete {self.network}")
+        
+    def _get_capabilities(self) -> Dict[str, Any]:
+        """Sovrascrive il metodo per aggiungere le capabilities VPN."""
+        capabilities = super()._get_capabilities()
+        capabilities.update(self.vpn_capabilities)
+        return capabilities
         
     def start(self) -> None:
         """Avvia il nodo VPN e l'interfaccia TUN."""

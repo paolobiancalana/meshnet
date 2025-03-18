@@ -12,6 +12,8 @@ Questo modulo contiene i componenti base della rete mesh:
 
 from .node import Node
 from .tun_adapter import TunAdapter
-from .vpn_node import VpnNode
 
-__all__ = ['Node', 'TunAdapter', 'VpnNode'] 
+# VpnNode importato separatamente per evitare cicli di importazione
+# from .vpn_node import VpnNode
+
+__all__ = ['Node', 'TunAdapter'] 

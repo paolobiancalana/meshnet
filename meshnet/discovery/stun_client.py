@@ -72,11 +72,44 @@ class StunClient:
         self.external_port = None
         
     def create_socket(self) -> socket.socket:
-        """Crea e configura il socket."""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind(('0.0.0.0', self.local_port))
-        sock.settimeout(2.0)  # 2 secondi di timeout
-        return sock
+        """Crea e configura il socket, provando porte alternative se necessario."""
+        max_attempts = 5
+        attempt = 0
+        last_error = None
+        
+        while attempt < max_attempts:
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                try:
+                    sock.bind(('0.0.0.0', self.local_port))
+                    sock.settimeout(2.0)  # 2 secondi di timeout
+                    
+                    # Se siamo arrivati qui, il binding è riuscito
+                    if attempt > 0:
+                        self.logger.info(f"Utilizzo porta alternativa: {self.local_port}")
+                    
+                    return sock
+                except OSError as e:
+                    sock.close()
+                    raise e
+            except OSError as e:
+                last_error = e
+                if e.errno == 48:  # Address already in use
+                    attempt += 1
+                    if self.local_port == 0:
+                        # Se la porta è 0 (automatica) ma fallisce, c'è un problema più grave
+                        break
+                    
+                    # Prova una porta casuale
+                    self.local_port = random.randint(10000, 65000)
+                    self.logger.info(f"La porta è già in uso, provo con la porta {self.local_port}")
+                else:
+                    # Errore diverso, non riprovare
+                    break
+        
+        # Se arriviamo qui, tutti i tentativi sono falliti
+        self.logger.error(f"Impossibile creare socket dopo {attempt} tentativi: {last_error}")
+        raise last_error or OSError("Impossibile creare socket")
         
     def discover(self) -> Tuple[Optional[str], Optional[int]]:
         """
